@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+
+{% block content %}
+<main class="container" style="padding: 120px 0;">
+    <header style="margin-bottom: 3rem; text-align: center;">
+        <h1 style="font-size: 3rem; margin-bottom: 0.5rem;">Analysis Results</h1>
+        <p id="result-status" style="color: var(--text-secondary);">Comprehensive Breakdown of Similarity metrics</p>
+    </header>
+
+    <div class="results-grid">
+        <div class="glass-card stat-card">
+            <span class="stat-value" id="final-score">0%</span>
+            <span class="stat-label">Weighted Score</span>
+        </div>
+        <div class="glass-card stat-card">
+            <span class="stat-value" id="cosine-score" style="background: linear-gradient(45deg, #00d2ff, #3a7bd5); -webkit-background-clip: text;">0%</span>
+            <span class="stat-label">Cosine Similarity</span>
+        </div>
+        <div class="glass-card stat-card">
+            <span class="stat-value" id="jaccard-score" style="background: linear-gradient(45deg, #f2994a, #f2c94c); -webkit-background-clip: text;">0%</span>
+            <span class="stat-label">Jaccard Index</span>
+        </div>
+        <div class="glass-card stat-card">
+            <span class="stat-value" id="lev-score" style="background: linear-gradient(45deg, #8e2de2, #4a00e0); -webkit-background-clip: text;">0%</span>
+            <span class="stat-label">Levenshtein Ratio</span>
+        </div>
+    </div>
+
+    <div class="compare-grid">
+        <div class="glass-card">
+            <h3>Highlighted Segments</h3>
+            <p style="color: var(--text-secondary); margin-bottom: 1.5rem; font-size: 0.9rem;">The following sections were identified as potentially copied from the source.</p>
+            <div id="highlights-container" style="line-height: 1.8; color: var(--text-primary);">
+                <!-- Highlights will be injected here -->
+            </div>
+        </div>
+        
+        <div class="glass-card">
+            <h3>Analysis Summary</h3>
+            <div id="summary-content" style="margin-top: 1rem;">
+                <!-- Summary will be injected here -->
+            </div>
+            
+            <div style="margin-top: 2rem;">
+                <button class="btn-primary" style="width: 100%;" onclick="window.print()">
+                    <i class="ph ph-file-pdf" style="margin-right: 8px;"></i> Export Report
+                </button>
+            </div>
+        </div>
+    </div>
+</main>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const data = JSON.parse(localStorage.getItem('lastResult'));
+        if (!data) {
+            window.location.href = '/dashboard';
+            return;
+        }
+
+        // Animate values
+        animateValue("final-score", 0, data.score, 1500);
+        animateValue("cosine-score", 0, data.cosine, 1500);
+        animateValue("jaccard-score", 0, data.jaccard, 1500);
+        animateValue("lev-score", 0, data.levenshtein, 1500);
+
+        // Inject highlights
+        const highlightsContainer = document.getElementById('highlights-container');
+        data.highlights.forEach(h => {
+            const span = document.createElement('span');
+            span.textContent = h.text + ". ";
+            
+            if (h.score > 80) {
+                span.className = 'highlight-match';
+                span.title = `High Similarity: ${h.score}%`;
+            } else if (h.score > 40) {
+                span.className = 'highlight-partial';
+                span.title = `Medium Similarity: ${h.score}%`;
+            }
+            
+            highlightsContainer.appendChild(span);
+        });
+
+        // Inject summary
+        const summary = document.getElementById('summary-content');
+        const verdict = data.score > 70 ? "🔴 High Risk of Plagiarism" : (data.score > 30 ? "🟡 Significant Matching Content" : "🟢 Low Similarity Detected");
+        summary.innerHTML = `
+            <div style="font-size: 1.2rem; font-weight: 700; margin-bottom: 1rem;">${verdict}</div>
+            <ul style="color: var(--text-secondary); padding-left: 1.2rem;">
+                <li>The engine analyzed ${data.highlights.length} segments.</li>
+                <li>Structural patterns suggest ${data.is_code ? 'code logic' : 'writing style'} matches.</li>
+                <li>Main source match found with ${data.cosine}% semantic overlap.</li>
+            </ul>
+        `;
+    });
+</script>
+{% endblock %}
