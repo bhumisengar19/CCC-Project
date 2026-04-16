@@ -1,35 +1,16 @@
 {% extends "base.html" %}
 
 {% block content %}
-<main class="hero">
-    <div class="container animate-in">
-        <span style="background: var(--accent-soft); color: var(--accent); padding: 4px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: 600; text-transform: uppercase;">v1.0 is Live</span>
-        <h1 style="margin-top: 1.5rem;">Check similarity <br>with <span style="color: var(--accent)">clarity.</span></h1>
-        <p>A minimal, multi-layer plagiarism detection tool designed for precision. Compare text, code, and semantics in seconds.</p>
-        <div class="flex items-center" style="justify-content: center; gap: 1rem;">
-            <a href="/dashboard" class="btn btn-primary" style="padding: 0.75rem 2rem; font-size: 1rem;">Get Started</a>
-            <a href="#features" class="btn btn-secondary" style="padding: 0.75rem 2rem; font-size: 1rem;">Learn more</a>
+<div class="container hero-section">
+    <div style="max-width: 600px; margin: 6rem auto; text-align: center;">
+        <h1 style="font-size: 4rem; font-weight: 800; letter-spacing: -0.06em; margin-bottom: 1.5rem; line-height: 0.9;">Check similarity with clarity.</h1>
+        <p style="font-size: 1.25rem; color: var(--text-muted); margin-bottom: 3rem; font-weight: 500;">
+            Secure, precise, and professional plagiarism detection for documents and code. Built for integrity.
+        </p>
+        <div style="display: flex; gap: 1rem; justify-content: center;">
+            <a href="/dashboard" class="btn btn-primary" style="padding: 14px 28px; font-size: 16px;">Get Started</a>
+            <a href="/auth" class="btn" style="padding: 14px 28px; font-size: 16px;">Sign In</a>
         </div>
     </div>
-</main>
-
-<section id="features" class="container" style="padding-bottom: 100px;">
-    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 2rem;">
-        <div class="card">
-            <i class="ph-bold ph-lightning" style="font-size: 1.5rem; color: var(--accent);"></i>
-            <h3 style="margin: 1rem 0 0.5rem;">Fast Analysis</h3>
-            <p style="font-size: 0.9rem; color: var(--text-muted);">Real-time weighted similarity scoring as you type or upload.</p>
-        </div>
-        <div class="card">
-            <i class="ph-bold ph-tree-structure" style="font-size: 1.5rem; color: var(--accent);"></i>
-            <h3 style="margin: 1rem 0 0.5rem;">Structural Check</h3>
-            <p style="font-size: 0.9rem; color: var(--text-muted);">Deep Python AST comparison to detect modified code logic.</p>
-        </div>
-        <div class="card">
-            <i class="ph-bold ph-shield-check" style="font-size: 1.5rem; color: var(--accent);"></i>
-            <h3 style="margin: 1rem 0 0.5rem;">Semantic Match</h3>
-            <p style="font-size: 0.9rem; color: var(--text-muted);">NLP-powered semantic engine to find paraphrased content.</p>
-        </div>
-    </div>
-</section>
+</div>
 {% endblock %}

@@ -1,54 +1,182 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="dashboard-wrapper">
+<div class="dashboard-grid">
     <aside class="sidebar">
-        <a href="#" class="sidebar-link active"><i class="ph-bold ph-text-aa"></i> Text Compare</a>
-        <a href="#" class="sidebar-link"><i class="ph-bold ph-file-arrow-up"></i> File Upload</a>
-        <a href="#" class="sidebar-link"><i class="ph-bold ph-code"></i> Code Check</a>
-        <a href="#" class="sidebar-link"><i class="ph-bold ph-clock"></i> History</a>
-        <a href="#" class="sidebar-link" style="margin-top: auto;"><i class="ph-bold ph-gear"></i> Settings</a>
+        <div style="margin-bottom: 3rem;">
+            <p class="sidebar-heading">Explore</p>
+            <nav class="sidebar-nav">
+                <a href="#" class="sidebar-link active" id="nav-compare">Compare Text</a>
+                <a href="#" class="sidebar-link" id="nav-history">History</a>
+            </nav>
+        </div>
+        <div>
+            <p class="sidebar-heading">Workspace</p>
+            <nav class="sidebar-nav">
+                <a href="#" class="sidebar-link" id="nav-documents">My Documents</a>
+                <a href="#" class="sidebar-link" id="nav-settings">Settings</a>
+            </nav>
+        </div>
     </aside>
 
-    <main class="main-content fade-in">
-        <header class="page-header">
-            <h2>Comparison</h2>
-            <p>Analyze and verify content similarity with our multi-layer engine.</p>
-        </header>
+    <div class="main-view">
+        <div class="main-view-content" id="view-compare">
+            <div style="margin-bottom: 3rem;">
+                <h1 style="font-size: 2.5rem; font-weight: 800; letter-spacing: -0.05em; margin-bottom: 0.5rem;">Environment Scan</h1>
+                <p style="color: var(--text-muted); font-size: 1rem;">Analyze document integrity within the living workspace.</p>
+            </div>
 
-        <div class="action-row">
-            <select id="mode-selector" class="btn btn-secondary">
-                <option value="text">General Text</option>
-                <option value="code">Python Code</option>
-            </select>
-            <button id="analyze-btn" class="btn btn-primary" onclick="analyzeFull()">Run Analysis</button>
+            <!-- Premium Feature: Drag & Drop + Browse Zone -->
+            <div class="drag-drop-zone card" id="dropZone" style="text-align: center; margin-bottom: 24px; padding: 2rem; border-style: dashed; cursor: pointer;">
+                <p style="font-weight: 600; color: var(--text);">Drop files here or <span style="color: #3b82f6; text-decoration: underline;">click to browse</span></p>
+                <p style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">Supports .txt, .md, .py</p>
+                <!-- Hidden file input for manual browse -->
+                <input type="file" id="fileUpload" multiple accept=".txt,.md,.py" style="display: none;">
+            </div>
+
+            <!-- Document Input Section -->
+            <div id="inputSection" style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 24px;">
+                <div class="card">
+                    <p style="font-size: 11px; font-weight: 800; text-transform: uppercase; color: var(--text-muted); margin-bottom: 1rem;">Origin Text</p>
+                    <textarea id="text1" rows="12" placeholder="Paste source content..."></textarea>
+                </div>
+                <div class="card">
+                    <p style="font-size: 11px; font-weight: 800; text-transform: uppercase; color: var(--text-muted); margin-bottom: 1rem;">Comparison Text</p>
+                    <textarea id="text2" rows="12" placeholder="Paste target content..."></textarea>
+                </div>
+            </div>
+
+            <!-- Analyze Bar -->
+            <div class="card" style="display: flex; justify-content: space-between; align-items: center; padding: 1.5rem 2rem; margin-bottom: 24px;">
+                <div style="display: flex; align-items: center; gap: 1rem;">
+                    <button class="btn btn-magnetic" id="analyzeBtn" onclick="runSmartAnalysis()" style="min-width: 180px;">
+                        <span id="btnText">Analyze Similarity</span>
+                    </button>
+                    <span id="typingIndicator" style="font-size: 13px; color: var(--text-muted); opacity: 0; transition: opacity 0.2s;">Analyzing...</span>
+                </div>
+                <div id="quickStatusLine" style="font-size: 14px; font-weight: 600; color: var(--text-muted);">Ready</div>
+            </div>
+
+            <!-- Insights & Result Panel -->
+            <div id="resultsContainer" style="display: none; flex-direction: column; gap: 24px;">
+                <!-- Main Result -->
+                <div class="card" style="text-align: center; padding: 3rem;">
+                    <h3 id="resultStatus" style="font-size: 18px; font-weight: 700; margin-bottom: 1rem; color: var(--text);">Result Pending</h3>
+                    <div style="font-size: 4rem; font-weight: 800; line-height: 1; letter-spacing: -0.05em; color: var(--text); margin-bottom: 2rem;">
+                        <span id="bigScore">0</span><span style="font-size: 2rem; color: var(--text-muted);">%</span>
+                    </div>
+                    <!-- Progress Bar -->
+                    <div style="width: 100%; max-width: 400px; height: 8px; background: var(--border); border-radius: 999px; overflow: hidden; margin: 0 auto;">
+                    <div id="scoreBar" style="width: 0%; height: 100%; background: var(--text); border-radius: 999px; transition: width 1.5s cubic-bezier(0.2, 0.8, 0.2, 1), background-color 0.5s;"></div>
+                </div>
+            </div>
+
+            <!-- Multi-Algorithm Engine Breakdown -->
+            <div class="card" style="padding: 1.5rem 2rem;">
+                <p style="font-size: 11px; font-weight: 800; text-transform: uppercase; color: var(--text-muted); margin-bottom: 1rem;">Deep Matrix Breakdown</p>
+                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 24px;">
+                    <div>
+                        <p style="font-size: 13px; font-weight: 600; color: var(--text-muted); margin-bottom: 4px;">Cosine Vector</p>
+                        <p style="font-size: 18px; font-weight: 700; color: var(--text);"><span id="statCosine">0</span>%</p>
+                    </div>
+                    <div>
+                        <p style="font-size: 13px; font-weight: 600; color: var(--text-muted); margin-bottom: 4px;">Jaccard NLP</p>
+                        <p style="font-size: 18px; font-weight: 700; color: var(--text);"><span id="statJaccard">0</span>%</p>
+                    </div>
+                    <div>
+                        <p style="font-size: 13px; font-weight: 600; color: var(--text-muted); margin-bottom: 4px;">Levenshtein Edit</p>
+                        <p style="font-size: 18px; font-weight: 700; color: var(--text);"><span id="statLevenshtein">0</span>%</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Mini Insights Panel -->
+                <div class="card" style="padding: 1.5rem 2rem;">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <div class="insight-stat">
+                            <p class="stat-label">Words</p>
+                            <p class="stat-val" id="statWords">0</p>
+                        </div>
+                        <div class="insight-stat">
+                            <p class="stat-label">Matches</p>
+                            <p class="stat-val" id="statMatches">0</p>
+                        </div>
+                        <div class="insight-stat">
+                            <p class="stat-label">Unique</p>
+                            <p class="stat-val" id="statUnique">0%</p>
+                        </div>
+                        <div class="insight-stat">
+                            <p class="stat-label">Time</p>
+                            <p class="stat-val" id="statTime">0ms</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sentence-Level & Phrase Segments -->
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
+                    <div class="card">
+                        <p style="font-size: 11px; font-weight: 800; text-transform: uppercase; color: var(--text-muted); margin-bottom: 1rem;">Sentence Flags</p>
+                        <div id="sentenceList" style="display: flex; flex-direction: column; gap: 12px; font-size: 13px;">
+                            <!-- Auto Populated -->
+                        </div>
+                    </div>
+                    <div class="card">
+                        <p style="font-size: 11px; font-weight: 800; text-transform: uppercase; color: var(--text-muted); margin-bottom: 1rem;">Exact Phrase Chunks</p>
+                        <div id="phraseList" style="display: flex; flex-direction: column; gap: 12px; font-size: 13px;">
+                            <!-- Auto Populated -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Highlight Panel -->
+                <div class="card">
+                    <p style="font-size: 11px; font-weight: 800; text-transform: uppercase; color: var(--text-muted); margin-bottom: 1rem;">Matched Comparisons</p>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;" id="highlightArea">
+                        <div class="highlight-box" id="hl-text1"></div>
+                        <div class="highlight-box" id="hl-text2"></div>
+                    </div>
+                </div>
+            </div>
         </div>
 
-        <div class="compare-stack">
-            <div class="input-card">
-                <label>Source Document</label>
-                <textarea id="text1" placeholder="Paste the original content here..."></textarea>
+        <!-- History View -->
+        <div class="main-view-content" id="view-history" style="display: none;">
+            <div style="margin-bottom: 3rem;">
+                <h1 style="font-size: 2.5rem; font-weight: 800; letter-spacing: -0.05em; margin-bottom: 0.5rem;">Scan History</h1>
+                <p style="color: var(--text-muted); font-size: 1rem;">Review past plagiarism environments.</p>
             </div>
+            <div class="card" style="text-align: center; padding: 4rem 2rem;">
+                <h3 style="color: var(--text-muted);">No recent scans found.</h3>
+            </div>
+        </div>
 
-            <div class="input-card">
-                <label>Comparison Document</label>
-                <textarea id="text2" placeholder="Paste the content to check similarity..."></textarea>
+        <!-- Documents View -->
+        <div class="main-view-content" id="view-documents" style="display: none;">
+            <div style="margin-bottom: 3rem;">
+                <h1 style="font-size: 2.5rem; font-weight: 800; letter-spacing: -0.05em; margin-bottom: 0.5rem;">My Documents</h1>
+                <p style="color: var(--text-muted); font-size: 1rem;">Manage your saved origin texts.</p>
+            </div>
+            <div class="card" style="text-align: center; padding: 4rem 2rem;">
+                <h3 style="color: var(--text-muted);">Your repository is empty.</h3>
             </div>
         </div>
 
-        <div class="card animate-in" style="margin-top: 12px; padding: 1.5rem 2rem;">
-            <div class="flex justify-between items-center" style="margin-bottom: 0.75rem;">
-                <span style="font-size: 0.95rem; font-weight: 700;">Real-time Index</span>
-                <span id="real-time-score" style="font-size: 0.95rem; font-weight: 800; color: var(--accent);">0%</span>
+        <!-- Settings View -->
+        <div class="main-view-content" id="view-settings" style="display: none;">
+            <div style="margin-bottom: 3rem;">
+                <h1 style="font-size: 2.5rem; font-weight: 800; letter-spacing: -0.05em; margin-bottom: 0.5rem;">Settings</h1>
+                <p style="color: var(--text-muted); font-size: 1rem;">Configure your environment preferences.</p>
             </div>
-            <div class="progress-container">
-                <div id="real-time-progress" class="progress-bar"></div>
-            </div>
-            <div id="typing-indicator" class="typing-indicator">
-                <i class="ph-bold ph-lightning"></i>
-                <span>Updating Similarity Metric</span><span class="dots"></span>
+            <div class="card">
+                <p style="font-weight: 600; margin-bottom: 1rem; color: var(--text);">Engine Parameters</p>
+                <div style="display: flex; flex-direction: column; gap: 1rem; color: var(--text-muted); font-size: 14px;">
+                    <label><input type="checkbox" checked style="width: auto; margin-right: 8px;"> Jaccard Similarity Engine</label>
+                    <label><input type="checkbox" checked style="width: auto; margin-right: 8px;"> Levenshtein Ratio Matrix</label>
+                    <label><input type="checkbox" checked style="width: auto; margin-right: 8px;"> Deep Cosine Verification</label>
+                </div>
             </div>
         </div>
-    </main>
+    </div>
 </div>
+
 {% endblock %}

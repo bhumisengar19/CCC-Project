@@ -1,109 +1,146 @@
-import os
-import ast
+from flask import Flask, render_template, request, jsonify
+import re
+import time
 import difflib
-import numpy as np
-import spacy
-from flask import Flask, render_template, request, jsonify, session, redirect, url_for
-from flask_cors import CORS
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
+import numpy as np
 
-# Initialize Flask app
 app = Flask(__name__)
-app.secret_key = "plagix_simple_secret_key"
-CORS(app)
 
-# Load SpaCy model for semantic analysis
-try:
-    nlp = spacy.load("en_core_web_sm")
-except OSError:
-    # Fallback if model isn't downloaded yet (e.g., in CI or first run)
-    import subprocess
-    subprocess.run(["python", "-m", "spacy", "download", "en_core_web_sm"])
-    nlp = spacy.load("en_core_web_sm")
+# --- Plagiarism Logic ---
 
-# --- CORE LOGIC: PREPROCESSING ---
 def preprocess_text(text):
-    """
-    Lowercase, remove punctuation, remove stopwords, and lemmatize.
-    """
-    doc = nlp(text.lower())
-    tokens = [token.lemma_ for token in doc if not token.is_stop and not token.is_punct and not token.is_space]
-    return " ".join(tokens)
+    # Basic cleaning: lowercase and punctuation removal
+    text = text.lower()
+    text = re.sub(r'[^\w\s]', '', text)
+    return text
 
-# --- CORE LOGIC: SIMILARITY ALGORITHMS ---
-
-def get_jaccard_similarity(str1, str2):
-    """Intersection over Union of words."""
+def calculate_jaccard(str1, str2):
     a = set(str1.split())
     b = set(str2.split())
-    intersection = len(a.intersection(b))
-    union = len(a.union(b))
-    return intersection / union if union > 0 else 0
+    if not a or not b: return 0
+    c = a.intersection(b)
+    return float(len(c)) / (len(a) + len(b) - len(c))
 
-def get_cosine_similarity(str1, str2):
-    """TF-IDF based cosine similarity."""
-    try:
-        vectorizer = TfidfVectorizer().fit_transform([str1, str2])
-        vectors = vectorizer.toarray()
-        return cosine_similarity(vectors)[0][1]
-    except Exception:
-        return 0
-
-def get_levenshtein_similarity(str1, str2):
-    """Normalized ratio using difflib."""
+def calculate_levenshtein(str1, str2):
+    # Returns a ratio of similarity based on edits
     return difflib.SequenceMatcher(None, str1, str2).ratio()
 
-def get_semantic_similarity(str1, str2):
-    """Simple SpaCy document similarity (word vectors)."""
-    doc1 = nlp(str1)
-    doc2 = nlp(str2)
-    if doc1.vector_norm and doc2.vector_norm:
-        return doc1.similarity(doc2)
-    return 0
-
-def calculate_weighted_score(text1, text2):
-    """
-    final = 0.4*cosine + 0.3*jaccard + 0.3*levenshtein
-    """
-    # Preprocess for structural similarity
-    clean1 = preprocess_text(text1)
-    clean2 = preprocess_text(text2)
-    
-    cos = get_cosine_similarity(clean1, clean2)
-    jac = get_jaccard_similarity(clean1, clean2)
-    lev = get_levenshtein_similarity(text1, text2) # Use raw for Levenshtein structure
-    
-    weighted = (0.4 * cos) + (0.3 * jac) + (0.3 * lev)
-    
-    # Semantic check (as an additional insight)
-    semantic = get_semantic_similarity(text1, text2)
-    
-    return {
-        "score": round(weighted * 100, 1),
-        "cosine": round(cos * 100, 1),
-        "jaccard": round(jac * 100, 1),
-        "levenshtein": round(lev * 100, 1),
-        "semantic": round(semantic * 100, 1)
-    }
-
-# --- CORE LOGIC: CODE PLAGIARISM ---
-def compare_code_ast(code1, code2):
-    """Compare Python code structure using AST."""
+def calculate_cosine(str1, str2):
     try:
-        tree1 = ast.parse(code1)
-        tree2 = ast.parse(code2)
-        
-        # Simple structural comparison (node types)
-        nodes1 = [type(n).__name__ for n in ast.walk(tree1)]
-        nodes2 = [type(n).__name__ for n in ast.walk(tree2)]
-        
-        ratio = difflib.SequenceMatcher(None, nodes1, nodes2).ratio()
-        return round(ratio * 100, 1)
-    except Exception:
+        tfidf = TfidfVectorizer().fit_transform([str1, str2])
+        return cosine_similarity(tfidf[0:1], tfidf[1:2])[0][0]
+    except:
         return 0
 
-# --- ROUTES ---
+def highlight_matches(text1, text2):
+    # Generates side-by-side highlighted HTML
+    words1 = text1.split()
+    words2 = text2.split()
+    
+    matcher = difflib.SequenceMatcher(None, words1, words2)
+    
+    hlt1 = []
+    hlt2 = []
+    matched_words_count = 0
+    
+    for tag, i1, i2, j1, j2 in matcher.get_opcodes():
+        w1_chunk = " ".join(words1[i1:i2])
+        w2_chunk = " ".join(words2[j1:j2])
+        
+        if tag == 'equal':
+            if w1_chunk: hlt1.append(f'<span class="match-highlight">{w1_chunk}</span>')
+            if w2_chunk: hlt2.append(f'<span class="match-highlight">{w2_chunk}</span>')
+            matched_words_count += (i2 - i1)
+        elif tag == 'replace':
+            if w1_chunk: hlt1.append(w1_chunk)
+            if w2_chunk: hlt2.append(w2_chunk)
+        elif tag == 'delete':
+            if w1_chunk: hlt1.append(w1_chunk)
+        elif tag == 'insert':
+            if w2_chunk: hlt2.append(w2_chunk)
+            
+    return " ".join(hlt1), " ".join(hlt2), matched_words_count
+
+def get_sentence_level_similarity(text1, text2):
+    sentences1 = [s.strip() for s in re.split(r'[.!?\n]+', text1) if len(s.strip()) > 10]
+    sentences2 = [s.strip() for s in re.split(r'[.!?\n]+', text2) if len(s.strip()) > 10]
+    
+    results = []
+    for s1 in sentences1:
+        best_score = 0
+        p1 = preprocess_text(s1)
+        for s2 in sentences2:
+            p2 = preprocess_text(s2)
+            score = calculate_levenshtein(p1, p2)
+            if score > best_score:
+                best_score = score
+        if best_score > 0.2:
+            results.append({"sentence": s1, "score": round(best_score * 100)})
+    
+    results.sort(key=lambda x: x['score'], reverse=True)
+    return results[:5]
+
+def get_exact_matched_phrases(text1, text2, min_words=4):
+    words1 = text1.split()
+    words2 = text2.split()
+    
+    matcher = difflib.SequenceMatcher(None, [w.lower() for w in words1], [w.lower() for w in words2])
+    phrases = []
+    
+    for tag, i1, i2, j1, j2 in matcher.get_opcodes():
+        if tag == 'equal' and (i2 - i1) >= min_words:
+            phrases.append(" ".join(words1[i1:i2]))
+    return list(set(phrases))[:5]
+
+def get_similarity_report(text1, text2):
+    start_time = time.time()
+    
+    p1 = preprocess_text(text1)
+    p2 = preprocess_text(text2)
+    
+    cosine = calculate_cosine(p1, p2)
+    jaccard = calculate_jaccard(p1, p2)
+    levenshtein = calculate_levenshtein(p1, p2)
+    
+    # Combined weighted score
+    overall_score = (0.4 * cosine) + (0.3 * jaccard) + (0.3 * levenshtein)
+    
+    # Detailed highlights and insights
+    t1_highlighted, t2_highlighted, matched_count = highlight_matches(text1, text2)
+    
+    words1_len = len(text1.split())
+    words2_len = len(text2.split())
+    total_words = max(words1_len, words2_len)
+    
+    unique_percent = max(100 - (overall_score * 100), 0)
+    process_time = time.time() - start_time
+    
+    return {
+        "overall_score": overall_score * 100,
+        "metrics": {
+            "cosine": cosine * 100,
+            "jaccard": jaccard * 100,
+            "levenshtein": levenshtein * 100
+        },
+        "insights": {
+            "word_count": total_words,
+            "matched_words": matched_count,
+            "unique_percent": unique_percent,
+            "time_ms": round(process_time * 1000)
+        },
+        "highlights": {
+            "text1": t1_highlighted,
+            "text2": t2_highlighted
+        },
+        "advanced": {
+            "sentences": get_sentence_level_similarity(text1, text2),
+            "phrases": get_exact_matched_phrases(text1, text2)
+        }
+    }
+
+# --- Routes ---
 
 @app.route('/')
 def index():
@@ -117,46 +154,17 @@ def auth():
 def dashboard():
     return render_template('dashboard.html')
 
-@app.route('/results')
-def results():
-    return render_template('results.html')
-
-@app.route('/api/analyze', methods=['POST'])
-def analyze():
+@app.route('/calculate', methods=['POST'])
+def calculate():
     data = request.json
     t1 = data.get('text1', '')
     t2 = data.get('text2', '')
-    mode = data.get('mode', 'text') # text or code
     
     if not t1 or not t2:
-        return jsonify({"error": "Missing input text"}), 400
-    
-    if mode == 'code':
-        score = compare_code_ast(t1, t2)
-        return jsonify({"score": score, "mode": "code"})
-    
-    results = calculate_weighted_score(t1, t2)
-    
-    # Highlight logic (sentence level)
-    sentences1 = [s.text.strip() for s in nlp(t1).sents]
-    highlights = []
-    for s in sentences1:
-        if not s: continue
-        # Find best match for this sentence in t2
-        best_match = 0
-        for s2 in [s_val.text.strip() for s_val in nlp(t2).sents]:
-            if not s2: continue
-            sim = get_levenshtein_similarity(s, s2)
-            if sim > best_match:
-                best_match = sim
+        return jsonify({"error": "Empty input"}), 400
         
-        highlights.append({
-            "text": s,
-            "sim": round(best_match * 100, 1)
-        })
-        
-    results['highlights'] = highlights
-    return jsonify(results)
+    report = get_similarity_report(t1, t2)
+    return jsonify(report)
 
 if __name__ == '__main__':
-    app.run(debug=True, port=8000)
+    app.run(port=8000, debug=True)
