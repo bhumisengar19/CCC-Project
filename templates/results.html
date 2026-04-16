@@ -1,50 +1,63 @@
 {% extends "base.html" %}
 
 {% block content %}
-<main class="container" style="padding: 120px 0;">
-    <header style="margin-bottom: 3rem; text-align: center;">
-        <h1 style="font-size: 3rem; margin-bottom: 0.5rem;">Analysis Results</h1>
-        <p id="result-status" style="color: var(--text-secondary);">Comprehensive Breakdown of Similarity metrics</p>
-    </header>
-
-    <div class="results-grid">
-        <div class="glass-card stat-card">
-            <span class="stat-value" id="final-score">0%</span>
-            <span class="stat-label">Weighted Score</span>
+<main class="container animate-in" style="padding-top: 4rem;">
+    <div class="results-header">
+        <div>
+            <h1>Analysis Report</h1>
+            <p id="report-date" style="color: var(--text-muted); font-size: 0.9rem;">Document comparison completed.</p>
         </div>
-        <div class="glass-card stat-card">
-            <span class="stat-value" id="cosine-score" style="background: linear-gradient(45deg, #00d2ff, #3a7bd5); -webkit-background-clip: text;">0%</span>
-            <span class="stat-label">Cosine Similarity</span>
-        </div>
-        <div class="glass-card stat-card">
-            <span class="stat-value" id="jaccard-score" style="background: linear-gradient(45deg, #f2994a, #f2c94c); -webkit-background-clip: text;">0%</span>
-            <span class="stat-label">Jaccard Index</span>
-        </div>
-        <div class="glass-card stat-card">
-            <span class="stat-value" id="lev-score" style="background: linear-gradient(45deg, #8e2de2, #4a00e0); -webkit-background-clip: text;">0%</span>
-            <span class="stat-label">Levenshtein Ratio</span>
+        <div style="text-align: right;">
+            <div class="score-highlight" id="main-score">0%</div>
+            <p style="font-weight: 600; color: var(--text-muted); font-size: 0.9rem;">Similarity Score</p>
         </div>
     </div>
 
-    <div class="compare-grid">
-        <div class="glass-card">
-            <h3>Highlighted Segments</h3>
-            <p style="color: var(--text-secondary); margin-bottom: 1.5rem; font-size: 0.9rem;">The following sections were identified as potentially copied from the source.</p>
-            <div id="highlights-container" style="line-height: 1.8; color: var(--text-primary);">
-                <!-- Highlights will be injected here -->
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-bottom: 3rem;">
+        <div class="card">
+            <h3 style="margin-bottom: 1rem; font-size: 1rem;">Metric Breakdown</h3>
+            <div style="display: flex; flex-direction: column; gap: 1rem;">
+                <div class="flex justify-between items-center">
+                    <span style="font-size: 0.9rem;">Cosine (Context)</span>
+                    <span id="cosine-val" style="font-weight: 600;">0%</span>
+                </div>
+                <div class="flex justify-between items-center">
+                    <span style="font-size: 0.9rem;">Jaccard (Structural)</span>
+                    <span id="jaccard-val" style="font-weight: 600;">0%</span>
+                </div>
+                <div class="flex justify-between items-center">
+                    <span style="font-size: 0.9rem;">Levenshtein (Literal)</span>
+                    <span id="levenshtein-val" style="font-weight: 600;">0%</span>
+                </div>
+                <div class="flex justify-between items-center">
+                    <span style="font-size: 0.9rem;">Semantic (Meaning)</span>
+                    <span id="semantic-val" style="font-weight: 600; color: var(--accent);">0%</span>
+                </div>
             </div>
         </div>
-        
-        <div class="glass-card">
-            <h3>Analysis Summary</h3>
-            <div id="summary-content" style="margin-top: 1rem;">
-                <!-- Summary will be injected here -->
+
+        <div class="card">
+            <h3 style="margin-bottom: 1rem; font-size: 1rem;">Match Verdict</h3>
+            <p id="verdict" style="font-size: 0.95rem; color: var(--text-muted);">The document shows a unique profile with minor structural overlaps.</p>
+            <div class="mt-4">
+                <button class="btn btn-secondary" style="width: 100%;" onclick="window.print()">Download PDF Report</button>
             </div>
-            
-            <div style="margin-top: 2rem;">
-                <button class="btn-primary" style="width: 100%;" onclick="window.print()">
-                    <i class="ph ph-file-pdf" style="margin-right: 8px;"></i> Export Report
-                </button>
+        </div>
+    </div>
+
+    <div class="card mb-4">
+        <h3 style="margin-bottom: 1.5rem; font-size: 1.1rem;">Highlighted Overlaps</h3>
+        <div id="highlighted-text" class="text-area-display">
+            <!-- Dynamic highlights injected here -->
+        </div>
+        <div class="flex mt-4" style="gap: 1.5rem;">
+            <div class="flex items-center">
+                <div class="highlight-high" style="width: 12px; height: 12px; border-radius: 2px; margin-right: 8px;"></div>
+                <span style="font-size: 0.8rem; color: var(--text-muted);">High Match (>70%)</span>
+            </div>
+            <div class="flex items-center">
+                <div class="highlight-mid" style="width: 12px; height: 12px; border-radius: 2px; margin-right: 8px;"></div>
+                <span style="font-size: 0.8rem; color: var(--text-muted);">Paraphrased (40-70%)</span>
             </div>
         </div>
     </div>
@@ -52,46 +65,65 @@
 
 <script>
     document.addEventListener('DOMContentLoaded', () => {
-        const data = JSON.parse(localStorage.getItem('lastResult'));
-        if (!data) {
+        const results = JSON.parse(sessionStorage.getItem('plagix_results'));
+        if (!results) {
             window.location.href = '/dashboard';
             return;
         }
 
-        // Animate values
-        animateValue("final-score", 0, data.score, 1500);
-        animateValue("cosine-score", 0, data.cosine, 1500);
-        animateValue("jaccard-score", 0, data.jaccard, 1500);
-        animateValue("lev-score", 0, data.levenshtein, 1500);
-
-        // Inject highlights
-        const highlightsContainer = document.getElementById('highlights-container');
-        data.highlights.forEach(h => {
-            const span = document.createElement('span');
-            span.textContent = h.text + ". ";
+        // Animate primary score
+        animateCounter('main-score', results.score);
+        
+        // Update breakdown
+        if (results.mode === 'code') {
+            document.getElementById('cosine-val').innerText = 'N/A';
+            document.getElementById('jaccard-val').innerText = 'N/A';
+            document.getElementById('levenshtein-val').innerText = 'N/A';
+            document.getElementById('semantic-val').innerText = 'N/A';
+            document.getElementById('verdict').innerText = "Structural comparison complete. This is the AST match percentage.";
+        } else {
+            animateCounter('cosine-val', results.cosine);
+            animateCounter('jaccard-val', results.jaccard);
+            animateCounter('levenshtein-val', results.levenshtein);
+            animateCounter('semantic-val', results.semantic);
             
-            if (h.score > 80) {
-                span.className = 'highlight-match';
-                span.title = `High Similarity: ${h.score}%`;
-            } else if (h.score > 40) {
-                span.className = 'highlight-partial';
-                span.title = `Medium Similarity: ${h.score}%`;
+            // Highlight injection
+            const display = document.getElementById('highlighted-text');
+            results.highlights.forEach(h => {
+                const span = document.createElement('span');
+                span.innerText = h.text + ". ";
+                if (h.sim > 70) span.className = 'highlight-high';
+                else if (h.sim > 40) span.className = 'highlight-mid';
+                display.appendChild(span);
+            });
+
+            // Verdict logic
+            const verdictEl = document.getElementById('verdict');
+            if (results.score > 60) {
+                verdictEl.innerText = "Significant similarity detected. Multiple sections appear to be heavily copied or poorly cited.";
+            } else if (results.score > 20) {
+                verdictEl.innerText = "Moderate overlap found. Includes common phrases or structural similarities in specific segments.";
             }
-            
-            highlightsContainer.appendChild(span);
-        });
-
-        // Inject summary
-        const summary = document.getElementById('summary-content');
-        const verdict = data.score > 70 ? "🔴 High Risk of Plagiarism" : (data.score > 30 ? "🟡 Significant Matching Content" : "🟢 Low Similarity Detected");
-        summary.innerHTML = `
-            <div style="font-size: 1.2rem; font-weight: 700; margin-bottom: 1rem;">${verdict}</div>
-            <ul style="color: var(--text-secondary); padding-left: 1.2rem;">
-                <li>The engine analyzed ${data.highlights.length} segments.</li>
-                <li>Structural patterns suggest ${data.is_code ? 'code logic' : 'writing style'} matches.</li>
-                <li>Main source match found with ${data.cosine}% semantic overlap.</li>
-            </ul>
-        `;
+        }
     });
+
+    function animateCounter(id, target) {
+        const el = document.getElementById(id);
+        if (!el) return;
+        
+        let startTimestamp = null;
+        const duration = 800;
+        
+        const step = (timestamp) => {
+            if (!startTimestamp) startTimestamp = timestamp;
+            const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+            const current = Math.floor(progress * target);
+            el.innerText = current + '%';
+            if (progress < 1) {
+                window.requestAnimationFrame(step);
+            }
+        };
+        window.requestAnimationFrame(step);
+    }
 </script>
 {% endblock %}

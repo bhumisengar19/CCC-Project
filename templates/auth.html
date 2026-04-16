@@ -1,77 +1,26 @@
 {% extends "base.html" %}
 
 {% block content %}
-<main class="auth-container">
-    <div class="auth-visual">
-        <div class="floating-shape shape-1" style="width: 200px; height: 200px;"></div>
-        <div class="glass-card" style="max-width: 400px; text-align: center;">
-            <i class="ph ph-shield-check" style="font-size: 4rem; color: var(--accent-primary); margin-bottom: 1.5rem; display: block;"></i>
-            <h2>Join the Excellence</h2>
-            <p>Secure your content with DUPLY's ironclap integrity system.</p>
-        </div>
-    </div>
-    
-    <div class="auth-form-container">
-        <div style="max-width: 400px; margin: 0 auto;">
-            <div id="auth-header" style="margin-bottom: 3rem;">
-                <h1 id="auth-title" style="font-size: 2.5rem; margin-bottom: 0.5rem;">Welcome Back</h1>
-                <p id="auth-subtitle" style="color: var(--text-secondary);">Enter your credentials to continue</p>
+<main class="auth-wrapper">
+    <div class="card auth-card animate-in">
+        <h2 style="margin-bottom: 0.5rem;">Sign In</h2>
+        <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 2rem;">Welcome back to Plagix.</p>
+        
+        <form>
+            <div class="input-group">
+                <label>Email Address</label>
+                <input type="email" placeholder="name@company.com">
             </div>
-            
-            <form id="auth-form">
-                <div class="input-group">
-                    <input type="email" id="email" placeholder=" " required>
-                    <label for="email">Work Email</label>
-                </div>
-                <div class="input-group">
-                    <input type="password" id="password" placeholder=" " required>
-                    <label for="password">Password</label>
-                </div>
-                
-                <button type="submit" class="btn-primary" style="width: 100%; padding: 1rem; font-size: 1rem; margin-bottom: 1.5rem;">
-                    Sign In
-                </button>
-            </form>
-            
-            <div style="text-align: center;">
-                <p style="color: var(--text-secondary);">Don't have an account? 
-                    <a href="#" id="toggle-auth" style="color: var(--accent-secondary); text-decoration: none; font-weight: 600;">Create One</a>
-                </p>
+            <div class="input-group">
+                <label>Password</label>
+                <input type="password" placeholder="••••••••">
             </div>
-        </div>
+            <button class="btn btn-primary" style="width: 100%; padding: 0.75rem; margin-top: 1rem;">Continue</button>
+        </form>
+        
+        <p style="margin-top: 2rem; font-size: 0.85rem; text-align: center; color: var(--text-muted);">
+            Don't have an account? <a href="#" style="color: var(--accent); font-weight: 600; text-decoration: none;">Sign Up</a>
+        </p>
     </div>
 </main>
-
-<script>
-    const toggleBtn = document.getElementById('toggle-auth');
-    const title = document.getElementById('auth-title');
-    const subtitle = document.getElementById('auth-subtitle');
-    const form = document.getElementById('auth-form');
-    let isLogin = true;
-
-    toggleBtn.addEventListener('click', (e) => {
-        e.preventDefault();
-        isLogin = !isLogin;
-        
-        // Animation using JS for smooth switch
-        form.style.opacity = '0';
-        form.style.transform = 'translateX(20px)';
-        
-        setTimeout(() => {
-            if (isLogin) {
-                title.textContent = "Welcome Back";
-                subtitle.textContent = "Enter your credentials to continue";
-                toggleBtn.textContent = "Create One";
-                form.querySelector('button').textContent = "Sign In";
-            } else {
-                title.textContent = "Create Account";
-                subtitle.textContent = "Start your journey with DUPLY today";
-                toggleBtn.textContent = "Sign In";
-                form.querySelector('button').textContent = "Sign Up";
-            }
-            form.style.opacity = '1';
-            form.style.transform = 'translateX(0)';
-        }, 300);
-    });
-</script>
 {% endblock %}

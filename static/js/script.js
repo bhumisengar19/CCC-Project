@@ -1,206 +1,149 @@
-// --- Page Transitions ---
-function initPageTransitions() {
-    const overlay = document.getElementById('transition-overlay');
-    
-    // On page load, play exit animation
-    window.addEventListener('load', () => {
-        overlay.classList.add('exit');
-        setTimeout(() => {
-            overlay.classList.remove('exit');
-            overlay.style.transform = 'translateY(100%)';
-        }, 600);
-    });
-
-    document.querySelectorAll('a').forEach(link => {
-        const href = link.getAttribute('href');
-        if (href && href.startsWith('/') && !href.startsWith('#')) {
-            link.addEventListener('click', (e) => {
-                e.preventDefault();
-                overlay.style.transform = 'translateY(100%)';
-                overlay.classList.add('active');
-                setTimeout(() => {
-                    window.location.href = href;
-                }, 600);
-            });
-        }
-    });
-}
-
 document.addEventListener('DOMContentLoaded', () => {
-    initCursorGlow();
     initTheme();
+    initRealTimeFeedback();
     initAnimations();
-    initTypedText();
-    initPageTransitions();
 });
-
-// --- Cursor Glow Effect ---
-function initCursorGlow() {
-    const glow = document.createElement('div');
-    glow.className = 'cursor-glow';
-    document.body.appendChild(glow);
-
-    document.addEventListener('mousemove', (e) => {
-        glow.style.left = e.clientX + 'px';
-        glow.style.top = e.clientY + 'px';
-    });
-}
 
 // --- Theme Management ---
 function initTheme() {
-    const savedTheme = localStorage.getItem('theme') || 'dark';
-    document.documentElement.setAttribute('data-theme', savedTheme);
-    
-    // Add theme toggle button listener if it exists
     const themeToggle = document.getElementById('theme-toggle');
+    const savedTheme = localStorage.getItem('theme') || 'light';
+    
+    document.documentElement.setAttribute('data-theme', savedTheme);
+    updateThemeIcon(savedTheme);
+
     if (themeToggle) {
         themeToggle.addEventListener('click', () => {
             const currentTheme = document.documentElement.getAttribute('data-theme');
-            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+            
             document.documentElement.setAttribute('data-theme', newTheme);
             localStorage.setItem('theme', newTheme);
-            
-            // Animation for toggle
-            themeToggle.classList.add('rotating');
-            setTimeout(() => themeToggle.classList.remove('rotating'), 500);
+            updateThemeIcon(newTheme);
         });
     }
 }
 
-// --- Typing Animation for Hero ---
-function initTypedText() {
-    const element = document.querySelector('.typing-text');
-    if (!element) return;
-    
-    const words = ["Authenticity", "Originality", "Excellence", "Integrity"];
-    let wordIndex = 0;
-    let charIndex = 0;
-    let isDeleting = false;
-    let typeSpeed = 100;
-
-    function type() {
-        const currentWord = words[wordIndex];
-        const displayText = isDeleting 
-            ? currentWord.substring(0, charIndex--) 
-            : currentWord.substring(0, charIndex++);
-        
-        element.textContent = displayText;
-
-        if (!isDeleting && charIndex === currentWord.length + 1) {
-            isDeleting = true;
-            typeSpeed = 1500; // Pause at end
-        } else if (isDeleting && charIndex === 0) {
-            isDeleting = false;
-            wordIndex = (wordIndex + 1) % words.length;
-            typeSpeed = 200;
-        } else {
-            typeSpeed = isDeleting ? 50 : 100;
-        }
-
-        setTimeout(type, typeSpeed);
-    }
-
-    type();
+function updateThemeIcon(theme) {
+    const icon = document.querySelector('#theme-toggle i');
+    if (!icon) return;
+    icon.className = theme === 'light' ? 'ph-sun' : 'ph-moon';
 }
 
-// --- Intersection Observer for Scroll Animations ---
-function initAnimations() {
-    const observerOptions = {
-        threshold: 0.1
+// --- Real-Time Feedback ---
+function initRealTimeFeedback() {
+    const text1 = document.getElementById('text1');
+    const text2 = document.getElementById('text2');
+    const progressBar = document.getElementById('real-time-progress');
+    const progressText = document.getElementById('real-time-score');
+
+    if (!text1 || !text2) return;
+
+    let timeout = null;
+
+    const runQuickAnalysis = () => {
+        const val1 = text1.value.trim();
+        const val2 = text2.value.trim();
+
+        if (val1.length === 0 || val2.length === 0) {
+            progressBar.style.width = '0%';
+            progressText.innerText = '0%';
+            return;
+        }
+
+        // Debounce to avoid excessive API calls
+        clearTimeout(timeout);
+        timeout = setTimeout(async () => {
+            try {
+                const response = await fetch('/api/analyze', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ text1: val1, text2: val2, mode: 'text' })
+                });
+                const data = await response.json();
+                
+                if (data.score !== undefined) {
+                    progressBar.style.width = data.score + '%';
+                    animateCounter('real-time-score', data.score);
+                }
+            } catch (err) {
+                console.error("Real-time analysis failed", err);
+            }
+        }, 800);
     };
 
+    text1.addEventListener('input', runQuickAnalysis);
+    text2.addEventListener('input', runQuickAnalysis);
+}
+
+// --- Counter Animation ---
+function animateCounter(id, target) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    
+    let current = parseFloat(el.innerText || "0");
+    const step = (target - current) / 10;
+    
+    const update = () => {
+        current += step;
+        if ((step > 0 && current >= target) || (step < 0 && current <= target)) {
+            el.innerText = target + '%';
+        } else {
+            el.innerText = Math.round(current) + '%';
+            requestAnimationFrame(update);
+        }
+    };
+    
+    requestAnimationFrame(update);
+}
+
+// --- Basic Page Animations ---
+function initAnimations() {
     const observer = new IntersectionObserver((entries) => {
         entries.forEach(entry => {
             if (entry.isIntersecting) {
                 entry.target.classList.add('animate-in');
             }
         });
-    }, observerOptions);
+    }, { threshold: 0.1 });
 
-    document.querySelectorAll('.glass-card, .hero h1, .hero p, .btn-primary').forEach(el => {
-        el.style.opacity = '0';
-        el.style.transform = 'translateY(30px)';
-        el.style.transition = 'all 0.8s cubic-bezier(0.4, 0, 0.2, 1)';
+    document.querySelectorAll('.card, .hero, .auth-card').forEach(el => {
         observer.observe(el);
     });
-
-    // CSS for the intersection observer animation
-    const style = document.createElement('style');
-    style.textContent = `
-        .animate-in {
-            opacity: 1 !important;
-            transform: translateY(0) !important;
-        }
-    `;
-    document.head.appendChild(style);
 }
 
-// --- Similarity Score Animation ---
-function animateValue(id, start, end, duration) {
-    const obj = document.getElementById(id);
-    if (!obj) return;
-    let startTimestamp = null;
-    const step = (timestamp) => {
-        if (!startTimestamp) startTimestamp = timestamp;
-        const progress = Math.min((timestamp - startTimestamp) / duration, 1);
-        obj.innerHTML = Math.floor(progress * (end - start) + start) + '%';
-        if (progress < 1) {
-            window.requestAnimationFrame(step);
-        }
-    };
-    window.requestAnimationFrame(step);
-}
+// --- API Actions ---
+async function analyzeFull() {
+    const text1 = document.getElementById('text1').value;
+    const text2 = document.getElementById('text2').value;
+    const mode = document.getElementById('mode-selector')?.value || 'text';
 
-// --- API Calls ---
-async function checkPlagiarism() {
-    const text1 = document.getElementById('text1')?.value;
-    const text2 = document.getElementById('text2')?.value;
-    const mode = document.getElementById('check-mode')?.value || 'text';
-    
     if (!text1 || !text2) {
-        alert("Please provide both texts for comparison.");
+        alert("Please provide both documents.");
         return;
     }
 
-    // Show loading state
-    const btn = document.getElementById('check-btn');
-    const originalText = btn.innerHTML;
-    btn.innerHTML = '<span class="loader"></span> Scanning...';
+    const btn = document.getElementById('analyze-btn');
+    const originalText = btn.innerText;
+    btn.innerText = "Analyzing...";
     btn.disabled = true;
 
     try {
-        const response = await fetch('/api/check', {
+        const response = await fetch('/api/analyze', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ text1, text2, mode })
         });
-        
         const data = await response.json();
         
-        // Redirect to results with data in session/localstorage or pass it directly
-        // For simplicity in this demo, we'll update the results on the same page or redirect
-        localStorage.setItem('lastResult', JSON.stringify(data));
+        // Save to session storage for results page
+        sessionStorage.setItem('plagix_results', JSON.stringify(data));
         window.location.href = '/results';
-        
-    } catch (error) {
-        console.error("Error:", error);
+    } catch (err) {
+        console.error(err);
+        alert("Something went wrong.");
     } finally {
-        btn.innerHTML = originalText;
+        btn.innerText = originalText;
         btn.disabled = false;
     }
 }
-
-// --- Magnetic Buttons ---
-document.querySelectorAll('.btn-primary').forEach(btn => {
-    btn.addEventListener('mousemove', (e) => {
-        const rect = btn.getBoundingClientRect();
-        const x = e.clientX - rect.left - rect.width / 2;
-        const y = e.clientY - rect.top - rect.height / 2;
-        
-        btn.style.transform = `translate(${x * 0.2}px, ${y * 0.2}px) scale(1.05)`;
-    });
-    
-    btn.addEventListener('mouseleave', () => {
-        btn.style.transform = `translate(0, 0) scale(1)`;
-    });
-});

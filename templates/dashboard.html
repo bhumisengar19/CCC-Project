@@ -1,86 +1,53 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="dashboard-layout">
-    <aside class="sidebar">
-        <a href="/" class="logo" style="margin-bottom: 2rem;">DUPLY.</a>
-        
-        <ul class="sidebar-nav">
-            <li><a href="#" class="active"><i class="ph ph-text-aa" style="margin-right: 12px;"></i> Comparison</a></li>
-            <li><a href="#"><i class="ph ph-file-arrow-up" style="margin-right: 12px;"></i> File Upload</a></li>
-            <li><a href="#"><i class="ph ph-clock-counter-clockwise" style="margin-right: 12px;"></i> History</a></li>
-            <li><a href="#"><i class="ph ph-chart-pie" style="margin-right: 12px;"></i> Reports</a></li>
-            <li style="margin-top: auto;"><a href="#"><i class="ph ph-gear" style="margin-right: 12px;"></i> Settings</a></li>
-        </ul>
-    </aside>
+<main class="container">
+    <div class="dashboard-grid">
+        <aside class="sidebar">
+            <a href="#" class="sidebar-link active"><i class="ph-bold ph-text-aa"></i> Text Compare</a>
+            <a href="#" class="sidebar-link"><i class="ph-bold ph-file-arrow-up"></i> File Upload</a>
+            <a href="#" class="sidebar-link"><i class="ph-bold ph-code"></i> Code Check</a>
+            <a href="#" class="sidebar-link"><i class="ph-bold ph-clock"></i> History</a>
+            <a href="#" class="sidebar-link" style="margin-top: 2rem;"><i class="ph-bold ph-gear"></i> Settings</a>
+        </aside>
 
-    <main class="content-area">
-        <header style="margin-bottom: 2rem; display: flex; justify-content: space-between; align-items: center;">
-            <div>
-                <h1 style="font-size: 2rem;">Text Comparison</h1>
-                <p style="color: var(--text-secondary);">Analyze and compare texts for potential plagiarism.</p>
+        <section class="animate-in">
+            <div class="flex justify-between items-center">
+                <div>
+                    <h2>Comparison</h2>
+                    <p style="color: var(--text-muted); font-size: 0.9rem;">Analyze similarity between two documents.</p>
+                </div>
+                <div class="flex items-center">
+                    <select id="mode-selector" class="btn btn-secondary" style="margin-right: 0.5rem; outline: none;">
+                        <option value="text">General Text</option>
+                        <option value="code">Python Code</option>
+                    </select>
+                    <button id="analyze-btn" class="btn btn-primary" onclick="analyzeFull()">Run Analysis</button>
+                </div>
             </div>
-            <div style="display: flex; gap: 1rem;">
-                <select id="check-mode" style="background: var(--glass-bg); color: white; border: 1px solid var(--glass-border); border-radius: 8px; padding: 0.5rem 1rem; outline: none;">
-                    <option value="text">General Text</option>
-                    <option value="code">Python Code</option>
-                </select>
-                <button id="check-btn" onclick="checkPlagiarism()" class="btn-primary">
-                    <i class="ph ph-magnifying-glass" style="margin-right: 8px;"></i> Run Analysis
-                </button>
-            </div>
-        </header>
 
-        <section class="compare-grid">
-            <div class="input-panel">
-                <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
-                    <span style="font-size: 0.8rem; color: var(--text-secondary);">Source Text</span>
-                    <span id="char-count-1" style="font-size: 0.8rem; color: var(--text-secondary);">0 chars</span>
+            <div class="compare-grid">
+                <div class="editor-box">
+                    <label style="font-size: 0.8rem; font-weight: 600; margin-bottom: 0.5rem; color: var(--text-muted)">Source Document</label>
+                    <textarea id="text1" placeholder="Paste the original content here..."></textarea>
                 </div>
-                <textarea id="text1" placeholder="Paste the original text here..."></textarea>
+                <div class="editor-box">
+                    <label style="font-size: 0.8rem; font-weight: 600; margin-bottom: 0.5rem; color: var(--text-muted)">Comparison Document</label>
+                    <textarea id="text2" placeholder="Paste the content to check..."></textarea>
+                </div>
             </div>
-            
-            <div class="input-panel">
-                <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
-                    <span style="font-size: 0.8rem; color: var(--text-secondary);">Comparison Text</span>
-                    <span id="char-count-2" style="font-size: 0.8rem; color: var(--text-secondary);">0 chars</span>
+
+            <div class="card mt-4">
+                <div class="flex justify-between items-center" style="margin-bottom: 0.5rem;">
+                    <span style="font-size: 0.9rem; font-weight: 600;">Real-time Index</span>
+                    <span id="real-time-score" style="font-size: 0.9rem; font-weight: 700; color: var(--accent);">0%</span>
                 </div>
-                <textarea id="text2" placeholder="Paste the text to check..."></textarea>
+                <div class="progress-container">
+                    <div id="real-time-progress" class="progress-bar"></div>
+                </div>
+                <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.5rem;">Dynamic scoring updates as you refine your text.</p>
             </div>
         </section>
-
-        <!-- Skeleton Loader (Hidden by default) -->
-        <div id="loader" style="display: none; margin-top: 2rem;">
-            <div class="glass-card" style="height: 150px; display: flex; align-items: center; justify-content: center;">
-                <div class="spinner"></div>
-                <span style="margin-left: 1rem;">Analyzing Content Structure...</span>
-            </div>
-        </div>
-    </main>
-</div>
-
-<style>
-    .spinner {
-        width: 30px;
-        height: 30px;
-        border: 3px solid var(--glass-border);
-        border-top-color: var(--accent-primary);
-        border-radius: 50%;
-        animation: spin 1s linear infinite;
-    }
-    @keyframes spin {
-        to { transform: rotate(360deg); }
-    }
-</style>
-
-<script>
-    // Local script for counts
-    const t1 = document.getElementById('text1');
-    const t2 = document.getElementById('text2');
-    const c1 = document.getElementById('char-count-1');
-    const c2 = document.getElementById('char-count-2');
-
-    t1.addEventListener('input', () => c1.textContent = `${t1.value.length} chars`);
-    t2.addEventListener('input', () => c2.textContent = `${t2.value.length} chars`);
-</script>
+    </div>
+</main>
 {% endblock %}

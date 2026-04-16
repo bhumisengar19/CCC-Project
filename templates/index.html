@@ -2,43 +2,34 @@
 
 {% block content %}
 <main class="hero">
-    <div class="floating-shape shape-1"></div>
-    <div class="floating-shape shape-2"></div>
-    
-    <div class="container" style="z-index: 10;">
-        <span style="color: var(--accent-primary); font-weight: 700; text-transform: uppercase; letter-spacing: 2px; font-size: 0.8rem;">Powered by Advanced AI</span>
-        <h1>Protect Your <span class="typing-text" style="color: var(--accent-secondary);"></span></h1>
-        <p>The next-generation plagiarism detection engine designed for the modern web. High-speed, semantic analysis, and beautiful reporting.</p>
-        
-        <div style="display: flex; gap: 1rem; justify-content: center; margin-top: 2rem;">
-            <a href="/dashboard" class="btn-primary" style="padding: 1rem 2.5rem; font-size: 1.1rem;">Start Checking</a>
-            <a href="#features" class="btn-secondary" style="padding: 1rem 2.5rem; color: white; text-decoration: none; border: 1px solid var(--glass-border); border-radius: 8px; font-weight: 600; transition: var(--transition-smooth);">View Features</a>
+    <div class="container animate-in">
+        <span style="background: var(--accent-soft); color: var(--accent); padding: 4px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: 600; text-transform: uppercase;">v1.0 is Live</span>
+        <h1 style="margin-top: 1.5rem;">Check similarity <br>with <span style="color: var(--accent)">clarity.</span></h1>
+        <p>A minimal, multi-layer plagiarism detection tool designed for precision. Compare text, code, and semantics in seconds.</p>
+        <div class="flex items-center" style="justify-content: center; gap: 1rem;">
+            <a href="/dashboard" class="btn btn-primary" style="padding: 0.75rem 2rem; font-size: 1rem;">Get Started</a>
+            <a href="#features" class="btn btn-secondary" style="padding: 0.75rem 2rem; font-size: 1rem;">Learn more</a>
         </div>
     </div>
 </main>
 
-<section id="features" class="container" style="padding: 100px 0;">
-    <h2 style="text-align: center; font-size: 3rem; margin-bottom: 4rem;">The Full-Stack Edge</h2>
-    <div class="compare-grid" style="grid-template-columns: repeat(3, 1fr);">
-        <div class="glass-card">
-            <i class="ph ph-cpu" style="font-size: 2.5rem; color: var(--accent-primary);"></i>
-            <h3>Multi-Layer Similarity</h3>
-            <p>Combining Jaccard, Cosine, and Levenshtein algorithms for 99.9% accuracy.</p>
+<section id="features" class="container" style="padding-bottom: 100px;">
+    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 2rem;">
+        <div class="card">
+            <i class="ph-bold ph-lightning" style="font-size: 1.5rem; color: var(--accent);"></i>
+            <h3 style="margin: 1rem 0 0.5rem;">Fast Analysis</h3>
+            <p style="font-size: 0.9rem; color: var(--text-muted);">Real-time weighted similarity scoring as you type or upload.</p>
         </div>
-        <div class="glass-card">
-            <i class="ph ph-code" style="font-size: 2.5rem; color: var(--accent-secondary);"></i>
-            <h3>Code AST Detection</h3>
-            <p>Unique structural analysis for Python, JS, and C++ code comparison.</p>
+        <div class="card">
+            <i class="ph-bold ph-tree-structure" style="font-size: 1.5rem; color: var(--accent);"></i>
+            <h3 style="margin: 1rem 0 0.5rem;">Structural Check</h3>
+            <p style="font-size: 0.9rem; color: var(--text-muted);">Deep Python AST comparison to detect modified code logic.</p>
         </div>
-        <div class="glass-card">
-            <i class="ph ph-chart-line-up" style="font-size: 2.5rem; color: var(--neon-blue);"></i>
-            <h3>Real-time Analytics</h3>
-            <p>Interactive charts and heatmap visualization of matched segments.</p>
+        <div class="card">
+            <i class="ph-bold ph-shield-check" style="font-size: 1.5rem; color: var(--accent);"></i>
+            <h3 style="margin: 1rem 0 0.5rem;">Semantic Match</h3>
+            <p style="font-size: 0.9rem; color: var(--text-muted);">NLP-powered semantic engine to find paraphrased content.</p>
         </div>
     </div>
 </section>
-
-<footer style="padding: 4rem 0; border-top: 1px solid var(--glass-border); text-align: center;">
-    <p style="color: var(--text-secondary);">&copy; 2026 DUPLY.AI - Advanced Plagiarism Intelligence</p>
-</footer>
 {% endblock %}
