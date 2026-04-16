@@ -1,57 +1,54 @@
 {% extends "base.html" %}
 
 {% block content %}
-<main class="container">
-    <div class="dashboard-grid">
-        <aside class="sidebar">
-            <a href="#" class="sidebar-link active"><i class="ph-bold ph-text-aa"></i> Text Compare</a>
-            <a href="#" class="sidebar-link"><i class="ph-bold ph-file-arrow-up"></i> File Upload</a>
-            <a href="#" class="sidebar-link"><i class="ph-bold ph-code"></i> Code Check</a>
-            <a href="#" class="sidebar-link"><i class="ph-bold ph-clock"></i> History</a>
-            <a href="#" class="sidebar-link" style="margin-top: 2rem;"><i class="ph-bold ph-gear"></i> Settings</a>
-        </aside>
+<div class="dashboard-wrapper">
+    <aside class="sidebar">
+        <a href="#" class="sidebar-link active"><i class="ph-bold ph-text-aa"></i> Text Compare</a>
+        <a href="#" class="sidebar-link"><i class="ph-bold ph-file-arrow-up"></i> File Upload</a>
+        <a href="#" class="sidebar-link"><i class="ph-bold ph-code"></i> Code Check</a>
+        <a href="#" class="sidebar-link"><i class="ph-bold ph-clock"></i> History</a>
+        <a href="#" class="sidebar-link" style="margin-top: auto;"><i class="ph-bold ph-gear"></i> Settings</a>
+    </aside>
 
-        <section class="animate-in">
-            <div class="flex justify-between items-center">
-                <div>
-                    <h2>Comparison</h2>
-                    <p style="color: var(--text-muted); font-size: 0.9rem;">Analyze similarity between two documents.</p>
-                </div>
-                <div class="flex items-center">
-                    <select id="mode-selector" class="btn btn-secondary" style="margin-right: 0.5rem; outline: none;">
-                        <option value="text">General Text</option>
-                        <option value="code">Python Code</option>
-                    </select>
-                    <button id="analyze-btn" class="btn btn-primary" onclick="analyzeFull()">Run Analysis</button>
-                </div>
+    <main class="main-content fade-in">
+        <header class="page-header">
+            <h2>Comparison</h2>
+            <p>Analyze and verify content similarity with our multi-layer engine.</p>
+        </header>
+
+        <div class="action-row">
+            <select id="mode-selector" class="btn btn-secondary">
+                <option value="text">General Text</option>
+                <option value="code">Python Code</option>
+            </select>
+            <button id="analyze-btn" class="btn btn-primary" onclick="analyzeFull()">Run Analysis</button>
+        </div>
+
+        <div class="compare-stack">
+            <div class="input-card">
+                <label>Source Document</label>
+                <textarea id="text1" placeholder="Paste the original content here..."></textarea>
             </div>
 
-            <div class="compare-grid">
-                <div class="editor-box">
-                    <label style="font-size: 0.8rem; font-weight: 600; margin-bottom: 0.5rem; color: var(--text-muted)">Source Document</label>
-                    <textarea id="text1" placeholder="Paste the original content here..."></textarea>
-                </div>
-                <div class="editor-box">
-                    <label style="font-size: 0.8rem; font-weight: 600; margin-bottom: 0.5rem; color: var(--text-muted)">Comparison Document</label>
-                    <textarea id="text2" placeholder="Paste the content to check..."></textarea>
-                </div>
+            <div class="input-card">
+                <label>Comparison Document</label>
+                <textarea id="text2" placeholder="Paste the content to check similarity..."></textarea>
             </div>
+        </div>
 
-            <div class="card mt-4 animate-in">
-                <div class="flex justify-between items-center" style="margin-bottom: 0.75rem;">
-                    <span style="font-size: 0.95rem; font-weight: 700;">Real-time Index</span>
-                    <span id="real-time-score" style="font-size: 0.95rem; font-weight: 800; color: var(--accent);">0%</span>
-                </div>
-                <div class="progress-container">
-                    <div id="real-time-progress" class="progress-bar"></div>
-                </div>
-                <div id="typing-indicator" class="typing-indicator">
-                    <i class="ph-bold ph-lightning"></i>
-                    <span>Updating Similarity Metric</span><span class="dots"></span>
-                </div>
-                <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 1rem;">Dynamic scoring follows your text structure as you write.</p>
+        <div class="card animate-in" style="margin-top: 12px; padding: 1.5rem 2rem;">
+            <div class="flex justify-between items-center" style="margin-bottom: 0.75rem;">
+                <span style="font-size: 0.95rem; font-weight: 700;">Real-time Index</span>
+                <span id="real-time-score" style="font-size: 0.95rem; font-weight: 800; color: var(--accent);">0%</span>
             </div>
-        </section>
-    </div>
-</main>
+            <div class="progress-container">
+                <div id="real-time-progress" class="progress-bar"></div>
+            </div>
+            <div id="typing-indicator" class="typing-indicator">
+                <i class="ph-bold ph-lightning"></i>
+                <span>Updating Similarity Metric</span><span class="dots"></span>
+            </div>
+        </div>
+    </main>
+</div>
 {% endblock %}

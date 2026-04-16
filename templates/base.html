@@ -14,22 +14,37 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body>
+    <div class="sky-background">
+        <div class="stars-container"></div>
+        <div class="clouds-container">
+            <div class="sky-cloud cloud-1"></div>
+            <div class="sky-cloud cloud-2"></div>
+            <div class="sky-cloud cloud-3"></div>
+        </div>
+    </div>
     <header>
-        <div class="container flex justify-between items-center" style="width: 100%;">
+        <div class="header-container">
             <a href="/" class="logo">PLAGIX</a>
-            <nav>
+            
+            <div class="nav-center">
                 <a href="/dashboard">Dashboard</a>
                 <a href="/auth">Sign In</a>
+            </div>
+
+            <div class="nav-right">
                 <a href="/dashboard" class="btn btn-primary">Start</a>
-                <div class="theme-switch" id="theme-switch" style="margin-left: 0.5rem;">
+                <div class="theme-switch" id="theme-switch">
                     <div class="switch-track">
                         <div class="sky">
                             <div class="stars">
                                 <div class="star"></div>
                                 <div class="star"></div>
                                 <div class="star"></div>
+                                <div class="star"></div>
+                                <div class="star"></div>
                             </div>
                             <div class="clouds">
+                                <div class="cloud"></div>
                                 <div class="cloud"></div>
                                 <div class="cloud"></div>
                                 <div class="cloud"></div>
@@ -44,7 +59,7 @@
                         </div>
                     </div>
                 </div>
-            </nav>
+            </div>
         </div>
     </header>
 
