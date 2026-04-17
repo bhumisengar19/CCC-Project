@@ -440,35 +440,129 @@ textarea:focus, input:focus {
 [data-theme="dark"] .mid-match { background: rgba(251, 191, 36, 0.3); color: #fde68a; }
 [data-theme="dark"] .low-match { background: rgba(56, 189, 248, 0.3); color: #bae6fd; }
 
-/* --- Luxury Premium Toggle (Dribbble Highlight) --- */
+/* --- High-End Animated Day/Night Toggle --- */
 .premium-toggle {
-    display: inline-flex;
-    align-items: center;
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 99px;
-    padding: 6px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-}
-
-.premium-toggle button {
-    background: transparent;
-    border: none;
-    color: var(--text-muted);
-    font-size: 13px;
-    font-weight: 600;
-    padding: 8px 16px;
-    border-radius: 99px;
+    width: 72px;
+    height: 36px;
+    background: linear-gradient(180deg, #87ceeb 0%, #e0f6ff 100%);
+    border-radius: 999px;
+    position: relative;
     cursor: pointer;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    overflow: hidden;
+    box-shadow: inset 0 2px 6px rgba(0,0,0,0.15), 0 2px 4px rgba(0,0,0,0.1);
+    transition: background 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.premium-toggle button.active {
-    background: var(--text);
-    color: var(--bg);
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+[data-theme="dark"] .premium-toggle {
+    background: linear-gradient(180deg, #0f172a 0%, #1e293b 100%);
 }
 
+.premium-toggle {
+    display: block; /* Override flex */
+    border: none;
+    padding: 0;
+}
+
+.toggle-knob {
+    position: absolute;
+    top: 4px;
+    left: 4px;
+    width: 28px;
+    height: 28px;
+    background: #fbbf24; /* Sun Yellow */
+    border-radius: 50%;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.2), inset -2px -2px 6px rgba(217, 119, 6, 0.8), 0 0 10px rgba(251, 191, 36, 0.5);
+    transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), background 0.4s, box-shadow 0.4s;
+    z-index: 5;
+    overflow: hidden;
+}
+
+/* Hover Micro-interaction */
+.premium-toggle:hover .toggle-knob {
+    transform: scale(1.05);
+}
+[data-theme="dark"] .premium-toggle:hover .toggle-knob {
+    transform: translateX(36px) scale(1.05); /* Account for translate + scale */
+}
+
+[data-theme="dark"] .toggle-knob {
+    transform: translateX(36px);
+    background: #e2e8f0; /* Moon Gray */
+    box-shadow: 0 2px 8px rgba(0,0,0,0.4), inset -3px -3px 6px rgba(148, 163, 184, 0.8), 0 0 12px rgba(255,255,255,0.4);
+}
+
+/* Craters */
+.knob-craters {
+    opacity: 0;
+    transition: opacity 0.4s;
+}
+
+[data-theme="dark"] .knob-craters {
+    opacity: 1;
+}
+
+.k-crater {
+    position: absolute;
+    background: rgba(0,0,0,0.15);
+    border-radius: 50%;
+    box-shadow: inset 1px 1px 3px rgba(0,0,0,0.3);
+}
+.k-1 { width: 8px; height: 8px; top: 6px; left: 6px; }
+.k-2 { width: 5px; height: 5px; top: 14px; left: 18px; }
+.k-3 { width: 6px; height: 6px; top: 20px; left: 8px; }
+
+/* Background Elements (Clouds & Stars) */
+.toggle-bg-layers {
+    position: absolute;
+    top: 0; left: 0; width: 100%; height: 100%;
+    z-index: 1;
+}
+
+/* Clouds for Day */
+.t-clouds {
+    position: absolute;
+    width: 100%; height: 100%;
+    transition: opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1), transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.t-cloud {
+    position: absolute;
+    background: white;
+    border-radius: 50px;
+    opacity: 0.9;
+}
+.tc-1 { width: 22px; height: 8px; top: 14px; right: 6px; }
+.tc-2 { width: 14px; height: 6px; top: 8px; right: 20px; }
+.tc-1::before { content:''; position:absolute; width:10px; height:10px; background:white; border-radius:50%; top:-6px; left:4px; }
+.tc-2::before { content:''; position:absolute; width:8px; height:8px; background:white; border-radius:50%; top:-4px; left:3px; }
+
+[data-theme="dark"] .t-clouds {
+    opacity: 0;
+    transform: translateY(10px) scale(0.9);
+}
+
+/* Stars for Night */
+.t-stars {
+    position: absolute;
+    width: 100%; height: 100%;
+    opacity: 0;
+    transform: translateY(-10px) scale(0.9);
+    transition: opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1), transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.t-star {
+    position: absolute;
+    background: white;
+    border-radius: 50%;
+    box-shadow: 0 0 3px white;
+    animation: twinkle 2s infinite alternate ease-in-out;
+}
+.ts-1 { width: 2px; height: 2px; top: 8px; left: 14px; animation-delay: 0s; }
+.ts-2 { width: 1.5px; height: 1.5px; top: 18px; left: 20px; animation-delay: 0.7s; }
+.ts-3 { width: 1px; height: 1px; top: 6px; left: 28px; animation-delay: 1.4s; }
+
+[data-theme="dark"] .t-stars {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+}
 /* --- PDF Export Format --- */
 @media print {
     body { background: white !important; color: black !important; }

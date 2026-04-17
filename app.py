@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, request, jsonify, session
 import re
 import time
 import difflib
@@ -24,6 +24,7 @@ stop_words = set(stopwords.words('english'))
 
 
 app = Flask(__name__)
+app.secret_key = 'plagix_super_secret_dev_key'
 
 # --- Plagiarism Logic ---
 
@@ -200,6 +201,11 @@ def dashboard():
 
 @app.route('/calculate', methods=['POST'])
 def calculate():
+    if not session.get('logged_in'):
+        session['usage_count'] = session.get('usage_count', 0) + 1
+        if session['usage_count'] > 5:
+            return jsonify({"error": "limit_reached"})
+
     data = request.json
     t1 = data.get('text1', '')
     t2 = data.get('text2', '')
@@ -208,7 +214,20 @@ def calculate():
         return jsonify({"error": "Empty input"}), 400
         
     report = get_similarity_report(t1, t2)
+    
+    if not session.get('logged_in'):
+        report['usage'] = {
+            'checks_used': session['usage_count'],
+            'checks_limit': 5
+        }
+        
     return jsonify(report)
+
+@app.route('/login_bypass', methods=['POST'])
+def login_bypass():
+    session['logged_in'] = True
+    session['usage_count'] = 0
+    return jsonify({"status": "success"})
 
 @app.route('/extract_text', methods=['POST'])
 def extract_text():

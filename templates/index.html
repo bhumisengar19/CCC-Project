@@ -4,16 +4,10 @@
 <div class="container hero-section" style="min-height: 80vh; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 0 1.5rem; animation: heroFadeIn 1s ease-out forwards; opacity: 0;">
     <div style="max-width: 800px; margin: 0 auto; display: flex; flex-direction: column; align-items: center;">
         
-        <!-- Optional Batch: SaaS Styling -->
-        <span style="background: rgba(139, 92, 246, 0.1); color: #8b5cf6; padding: 6px 16px; border-radius: 999px; font-size: 13px; font-weight: 700; margin-bottom: 2rem; border: 1px solid rgba(139, 92, 246, 0.2);">
-            AI-powered plagiarism detection ⚡
-        </span>
-
-        <!-- Dynamic Typing Heading -->
-        <h1 style="font-size: clamp(3rem, 5vw, 4.5rem); font-weight: 800; letter-spacing: -0.05em; margin-bottom: 1.5rem; line-height: 1.1; color: var(--text);">
-            Detect plagiarism with <br>
-            <span id="typewriter" style="color: #3b82f6; border-right: 3px solid #3b82f6; padding-right: 4px; animation: blink 0.8s step-end infinite;"></span>
-        </h1>
+        <!-- Vapor Text Engine Injection -->
+        <div style="height: 200px; display: flex; align-items: center; justify-content: center; width: 100%; margin-bottom: 1.5rem;">
+            <canvas id="vaporCanvas" width="800" height="200" style="display: block; width: 100%; max-width: 800px;"></canvas>
+        </div>
         
         <!-- Improved Subtext -->
         <p style="font-size: 1.125rem; color: var(--text-muted); margin-bottom: 2.5rem; font-weight: 500; max-width: 600px; line-height: 1.6;">
@@ -65,41 +59,187 @@
 
 <script>
 document.addEventListener("DOMContentLoaded", () => {
-    // Typewriter Native Component Logic
-    const words = ["clarity.", "precision.", "confidence.", "intelligence."];
+    // ----------------------------------------------------
+    // Component: VaporizeTextCycle (Native Canvas Engine) 
+    // ----------------------------------------------------
+    const canvas = document.getElementById("vaporCanvas");
+    const ctx = canvas.getContext("2d");
+    
+    const texts = ["PLAGIX", "Plagiarism", "Detector"];
     let wordIndex = 0;
-    let charIndex = 0;
-    let isDeleting = false;
-    const typingElement = document.getElementById("typewriter");
+    let particles = [];
+    let state = 'IDLE'; // VAPORIZE, REFORM, IDLE
     
-    function typeEffect() {
-        const currentString = words[wordIndex];
+    function createParticlesForText(text, isDark) {
+        const offscreen = document.createElement('canvas');
+        offscreen.width = canvas.width;
+        offscreen.height = canvas.height;
+        const octx = offscreen.getContext('2d', {willReadFrequently: true});
         
-        if (isDeleting) {
-            typingElement.textContent = currentString.substring(0, charIndex - 1);
-            charIndex--;
-        } else {
-            typingElement.textContent = currentString.substring(0, charIndex + 1);
-            charIndex++;
+        octx.fillStyle = "#ffffff"; 
+        octx.font = '800 100px Inter, system-ui, sans-serif';
+        octx.textAlign = 'center';
+        octx.textBaseline = 'middle';
+        octx.fillText(text, offscreen.width / 2, offscreen.height / 2);
+        
+        const data = octx.getImageData(0, 0, offscreen.width, offscreen.height).data;
+        let pArray = [];
+        
+        // Dark mode = more particles but smaller points. Light mode = fewer particles but larger soft squares
+        const resolution = isDark ? 2 : 3; 
+        
+        for(let y = 0; y < offscreen.height; y += resolution) {
+            for(let x = 0; x < offscreen.width; x += resolution) {
+                const index = (y * offscreen.width + x) * 4;
+                if(data[index + 3] > 128) {
+                    pArray.push({ tx: x, ty: y });
+                }
+            }
         }
-        
-        // Dynamic Speeds defining Shadcn UX
-        let typeSpeed = isDeleting ? 40 : 60;
-        
-        if (!isDeleting && charIndex === currentString.length) {
-            typeSpeed = 1500; // Pause at end of word
-            isDeleting = true;
-        } else if (isDeleting && charIndex === 0) {
-            isDeleting = false;
-            wordIndex = (wordIndex + 1) % words.length;
-            typeSpeed = 500; // Pause before new word
-        }
-        
-        setTimeout(typeEffect, typeSpeed);
+        return pArray;
     }
-    
-    // Boot sequence delay
-    setTimeout(typeEffect, 500); 
+
+    function morphToNext() {
+        const isDark = document.body.getAttribute('data-theme') === 'dark';
+        const targetLayout = createParticlesForText(texts[wordIndex], isDark);
+        
+        for(let i = 0; i < targetLayout.length; i++) {
+            if(particles[i]) {
+                particles[i].tx = targetLayout[i].tx;
+                particles[i].ty = targetLayout[i].ty;
+            } else {
+                particles.push({
+                    x: Math.random() * canvas.width,
+                    y: isDark ? (Math.random() * canvas.height) : (canvas.height + 50),
+                    tx: targetLayout[i].tx,
+                    ty: targetLayout[i].ty,
+                    vx: 0, vy: 0, alpha: 0,
+                    avx: 0, avy: 0
+                });
+            }
+        }
+        
+        if(particles.length > targetLayout.length) {
+            particles.splice(targetLayout.length);
+        }
+        
+        state = 'REFORM';
+        wordIndex = (wordIndex + 1) % texts.length;
+        
+        setTimeout(() => {
+            const currentDark = document.body.getAttribute('data-theme') === 'dark';
+            state = 'VAPORIZE';
+            particles.forEach(p => {
+                if (currentDark) {
+                    // Star scattering (fast radial)
+                    p.avx = (Math.random() - 0.5) * 45; 
+                    p.avy = (Math.random() - 0.5) * 45; 
+                } else {
+                    // Cloud float (gentle upward drift)
+                    p.avx = (Math.random() - 0.5) * 8;
+                    p.avy = -(Math.random() * 6 + 2); // strictly upward
+                }
+            });
+            setTimeout(morphToNext, currentDark ? 900 : 1500); 
+        }, 2500); 
+    }
+
+    // Mouse Interaction Tracking
+    let mouse = { x: -1000, y: -1000 };
+    canvas.addEventListener('mousemove', (e) => {
+        const rect = canvas.getBoundingClientRect();
+        mouse.x = (e.clientX - rect.left) * (canvas.width / rect.width);
+        mouse.y = (e.clientY - rect.top) * (canvas.height / rect.height);
+    });
+    canvas.addEventListener('mouseleave', () => {
+        mouse.x = -1000;
+        mouse.y = -1000;
+    });
+
+    function renderLoop() {
+        const time = Date.now() * 0.002;
+        const isDark = document.body.getAttribute('data-theme') === 'dark';
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        
+        if (isDark) {
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+            ctx.shadowBlur = 5;
+            ctx.shadowColor = 'rgba(255, 255, 255, 0.6)';
+        } else {
+            ctx.fillStyle = 'rgba(15, 23, 42, 0.85)';
+            ctx.shadowBlur = 0;
+        }
+        
+        const pdSize = isDark ? 2 : 4; 
+        
+        particles.forEach(p => {
+            if(state === 'VAPORIZE') {
+                p.x += p.avx;
+                p.y += p.avy;
+                if (isDark) {
+                    p.avx *= 0.94; p.avy *= 0.94; 
+                    if(p.alpha > 0) p.alpha -= 0.05; 
+                } else {
+                    p.avx *= 0.98; p.avy *= 0.98; 
+                    if(p.alpha > 0) p.alpha -= 0.02; 
+                }
+            } else { 
+                let targetX = p.tx;
+                let targetY = p.ty;
+
+                if (!isDark) {
+                    // Cloud morphology drifting logic
+                    targetY += Math.sin(time + p.tx * 0.01) * 3;
+                    targetX += Math.cos(time + p.ty * 0.01) * 2;
+                }
+
+                // Cursor Wind Disruption Tracker
+                const dxMouse = p.x - mouse.x;
+                const dyMouse = p.y - mouse.y;
+                const distMouse = Math.sqrt(dxMouse * dxMouse + dyMouse * dyMouse);
+
+                if (distMouse < 80) {
+                    // Disperse gently
+                    p.vx += dxMouse * 0.005;
+                    p.vy += dyMouse * 0.005;
+                    p.alpha -= 0.04;
+                } else {
+                    // Restore gracefully
+                    if (isDark && p.alpha < 1) p.alpha += 0.06;
+                    if (!isDark && p.alpha < 1) p.alpha += 0.03;
+                }
+
+                const dx = targetX - p.x;
+                const dy = targetY - p.y;
+                
+                if (isDark) {
+                    p.vx = (p.vx + dx * 0.08) * 0.75; 
+                    p.vy = (p.vy + dy * 0.08) * 0.75;
+                } else {
+                    p.vx = (p.vx + dx * 0.03) * 0.85; 
+                    p.vy = (p.vy + dy * 0.03) * 0.85;
+                }
+                
+                p.x += p.vx;
+                p.y += p.vy;
+            }
+            
+            // Star twinkle opacity multiplier
+            let finalAlpha = p.alpha;
+            if (isDark && state === 'REFORM') {
+                finalAlpha *= (0.85 + Math.random() * 0.3);
+            }
+            
+            ctx.globalAlpha = Math.max(0, Math.min(1, finalAlpha));
+            ctx.fillRect(p.x, p.y, pdSize, pdSize);
+        });
+        
+        requestAnimationFrame(renderLoop);
+    }
+
+    // Initialize Cycle
+    morphToNext();
+    renderLoop();
 });
 </script>
 {% endblock %}

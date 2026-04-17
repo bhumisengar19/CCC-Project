@@ -50,6 +50,8 @@
             <div class="card" style="display: flex; justify-content: space-between; align-items: center; padding: 1.5rem 2rem; margin-bottom: 24px;">
                 <div style="display: flex; align-items: center; gap: 1rem;">
                     <span id="typingIndicator" style="font-size: 13px; color: var(--text-muted); opacity: 0; transition: opacity 0.2s;">Analyzing...</span>
+                    <!-- Free Tier Quota Tracker -->
+                    <span id="usageIndicator" style="font-size: 13px; font-weight: 500; color: #f59e0b; opacity: 0; transition: opacity 0.3s; padding: 4px 10px; background: rgba(245, 158, 11, 0.1); border-radius: 999px;"></span>
                 </div>
                 <!-- Analysis Button Array -->
                 <div style="display: flex; gap: 12px;">
@@ -197,6 +199,21 @@
             </div>
         </div>
     </div>
+    <!-- Paywall Modal Overlay -->
+    <div id="loginModal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); backdrop-filter: blur(4px); z-index: 9999; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.3s ease;">
+        <div class="card" style="padding: 32px; max-width: 400px; text-align: center; transform: scale(0.95); transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 0 20px 40px rgba(0,0,0,0.2);">
+            <h2 style="font-size: 24px; font-weight: 800; margin-bottom: 12px; color: var(--text);">Continue with PLAGIX</h2>
+            <p style="font-size: 14px; color: var(--text-muted); margin-bottom: 24px;">You’ve reached the free limit. Sign in to continue scanning documents.</p>
+            <div style="display: flex; flex-direction: column; gap: 12px;">
+                <button class="btn btn-primary" style="width: 100%; border-radius: 8px;" onclick="bypassLogin()">Sign In (Demo)</button>
+                <div style="display: flex; gap: 12px;">
+                    <button class="btn btn-secondary" style="width: 100%; border-radius: 8px;">Sign Up</button>
+                    <button class="btn btn-secondary" style="width: 100%; border-radius: 8px;" onclick="closeModal()">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
 </div>
 
 {% endblock %}
