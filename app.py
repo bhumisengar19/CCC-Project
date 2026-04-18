@@ -271,10 +271,9 @@ def profile():
 
 @app.route('/calculate', methods=['POST'])
 def calculate():
-    if not session.get('logged_in'):
-        session['usage_count'] = session.get('usage_count', 0) + 1
-        if session['usage_count'] > 10:
-            return jsonify({"error": "limit_reached"})
+    session['usage_count'] = session.get('usage_count', 0) + 1
+    if not session.get('logged_in') and session['usage_count'] > 10:
+        return jsonify({"error": "limit_reached"})
 
     data = request.json
     t1 = data.get('text1', '')
@@ -285,11 +284,10 @@ def calculate():
         
     report = get_similarity_report(t1, t2)
     
-    if not session.get('logged_in'):
-        report['usage'] = {
-            'checks_used': session['usage_count'],
-            'checks_limit': 10
-        }
+    report['usage'] = {
+        'checks_used': session['usage_count'],
+        'checks_limit': 10
+    }
         
     return jsonify(report)
 

@@ -418,7 +418,41 @@ function renderHistory() {
 }
 
 // Render history on load
-document.addEventListener('DOMContentLoaded', renderHistory);
+document.addEventListener('DOMContentLoaded', () => {
+    renderHistory();
+    renderDocuments();
+});
+
+// 6. Documents Repository Engine
+function renderDocuments() {
+    const docGrid = document.querySelector('#view-documents .card');
+    if (!docGrid) return;
+    
+    const hist = JSON.parse(localStorage.getItem('plagix_history')) || [];
+    if (hist.length === 0) {
+        docGrid.innerHTML = `<h3 style="color: var(--text-muted);">Your repository is empty.</h3>`;
+        return;
+    }
+    
+    // Create unique list based on snippets
+    const uniqueDocs = Array.from(new Set(hist.map(h => h.snippet)));
+    
+    docGrid.style.textAlign = 'left';
+    docGrid.style.padding = '1.5rem';
+    docGrid.innerHTML = `
+        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 16px;">
+            ${uniqueDocs.map((doc, idx) => `
+                <div class="card" style="padding: 1rem; border: 1px solid var(--border); background: rgba(59, 130, 246, 0.05);">
+                    <div style="width: 32px; height: 32px; background: #3b82f6; border-radius: 8px; display: flex; align-items: center; justify-content: center; margin-bottom: 12px;">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                    </div>
+                    <p style="font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 4px;">Doc #00${idx + 1}</p>
+                    <p style="font-size: 11px; color: var(--text-muted); line-height: 1.4;">${doc}</p>
+                </div>
+            `).join('')}
+        </div>
+    `;
+}
 
 // Utility: Number Counter
 function animateValue(id, start, end, duration) {
